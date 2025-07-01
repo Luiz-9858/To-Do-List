@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tarefas</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Minhas Tarefas</h1>
+        </header>
+        
+        <main>
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="input-container">
+                    <input type="text" id="taskInput" placeholder="Digite uma nova tarefa..." maxlength="100" autocomplete="off">
+
+                    <button id="addBtn" class="btn-primary">
+                        <span class="btn-text">Adicionar</span>
+                        <span class="btn-icon">+</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Filter Section -->
+            <section class="filter-section">
+                <dic class="filter-buttons">
+                    <button class="filter-btn-active" data-filter="all">
+                        <span>Todas</span>
+                        <span class="filter-count" id="allCount">0</span>
+                    </button>
+
+                    <button class="filter-btn" data-filter="pending">
+                        <span>Pendentes</span>
+                        <span class="filter-count" id="allCount">0</span>
+                    </button>
+
+                    <button class="filter-btn-active" data-filter="completed">
+                        <span>Concluídas</span>
+                        <span class="filter-count" id="allCount">0</span>
+                    </button>
+                </dic>
+            </section>
+
+            <!-- Tasks Section -->
+            <section class="tasks-section">
+                <div class="tasks-header">
+                    <h2 id="sectionTitle">Todas as Tarefas</h2>
+                    <div class="tasks-actions">
+                        <button id="clearCompleteBtn" class="btn-secondary" style="display: none;">Limpar Concluídas</button>
+                    </div>
+                </div>
+
+                <ul id="taskList" class="task-list"></ul>
+                
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-icon">lapis</div>
+                    <h3>Nenhuma tarefa encontrada</h3>
+                    <p>Coemce adicionando sua primeira tarefa!</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer Stats-->
+        <footer class="stats-footer">
+            <div class="task-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="totalTasks">0</span>
+                    <span class="stat-label">Total</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-value" id="completedTasks">0</span>
+                    <span class="stat-label">Concluídas</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-value" id="pendingTasks">0</span>
+                    <span class="stat-label">Pendentes</span>
+                </div>
+            </div>
+        </footer> 
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <script src="js/script.js"></script>
+</body>
+</html>
