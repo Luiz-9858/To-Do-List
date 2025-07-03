@@ -27,22 +27,22 @@
 
             <!-- Filter Section -->
             <section class="filter-section">
-                <dic class="filter-buttons">
-                    <button class="filter-btn-active" data-filter="all">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">
                         <span>Todas</span>
                         <span class="filter-count" id="allCount">0</span>
                     </button>
 
                     <button class="filter-btn" data-filter="pending">
                         <span>Pendentes</span>
-                        <span class="filter-count" id="allCount">0</span>
+                        <span class="filter-count" id="pendingCount">0</span>
                     </button>
 
-                    <button class="filter-btn-active" data-filter="completed">
+                    <button class="filter-btn" data-filter="completed">
                         <span>Concluídas</span>
-                        <span class="filter-count" id="allCount">0</span>
+                        <span class="filter-count" id="completedCount">0</span>
                     </button>
-                </dic>
+                </div>
             </section>
 
             <!-- Tasks Section -->
@@ -57,9 +57,9 @@
                 <ul id="taskList" class="task-list"></ul>
                 
                 <div id="emptyState" class="empty-state">
-                    <div class="empty-icon">lapis</div>
+                    <div class="empty-icon">✏️</div>
                     <h3>Nenhuma tarefa encontrada</h3>
-                    <p>Coemce adicionando sua primeira tarefa!</p>
+                    <p>Comece adicionando sua primeira tarefa!</p>
                 </div>
             </section>
         </main>

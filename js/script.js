@@ -40,6 +40,7 @@ class TodoApp {
      */
     init() {
         this.setupEventListeners();
+        this.setupFilterEvents();
         this.loadTasks();
         this.render();
         this.showToast('Aplicação carregada!', 'Bem-vindo à sua lista de tarefas', 'success');
@@ -55,14 +56,6 @@ class TodoApp {
             if (e.key === 'Enter') {
                 this.addTask();
             }
-        });
-        
-        // Filtros
-        this.elements.filterButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.setFilter(btn.dataset.filter);
-                this.updateFilterButtons(btn);
-            });
         });
         
         // Limpar concluídas
@@ -88,6 +81,31 @@ class TodoApp {
         // Auto-save quando sair da página
         window.addEventListener('beforeunload', () => {
             this.saveTasks();
+        });
+    }
+    
+    /**
+     * Configura os eventos dos filtros
+     */
+    setupFilterEvents() {
+        this.elements.filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filter = btn.dataset.filter;
+                this.setFilter(filter);
+                this.updateFilterButtons(filter);
+            });
+        });
+    }
+    
+    /**
+     * Atualiza os botões de filtro
+     */
+    updateFilterButtons(activeFilter) {
+        this.elements.filterButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.filter === activeFilter) {
+                btn.classList.add('active');
+            }
         });
     }
     
@@ -126,7 +144,7 @@ class TodoApp {
         };
         
         // Adicionar à lista
-        this.tasks.unshift(newTask); // Adiciona no início
+        this.tasks.unshift(newTask);
         this.elements.taskInput.value = '';
         
         // Feedback visual
@@ -173,7 +191,7 @@ class TodoApp {
         if (!task) return;
         
         // Confirmação personalizada
-        if (!this.showConfirmDialog(`Deseja realmente excluir a tarefa "${task.text}"?`)) {
+        if (!confirm(`Deseja realmente excluir a tarefa "${task.text}"?`)) {
             return;
         }
         
@@ -201,8 +219,176 @@ class TodoApp {
             return;
         }
         
-        if (!this.showConfirmDialog(`Deseja excluir ${completedCount} tarefa(s) concluída(s)?`)) {
+        if (!confirm(`Deseja excluir ${completedCount} tarefa(s) concluída(s)?`)) {
             return;
         }
         
-        this.tasks = this.tasks.filter(t
+        this.tasks = this.tasks.filter(t => !t.completed);
+        this.render();
+        this.saveTasks();
+        this.showToast('Tarefas limpas!', `${completedCount} tarefa(s) concluída(s) removida(s)!`, 'success');
+    }
+    
+    /**
+     * Define o filtro atual
+     */
+    setFilter(filter) {
+        this.currentFilter = filter;
+        this.render();
+        
+        // Atualiza título da seção
+        let title = 'Todas as Tarefas';
+        if (filter === 'pending') title = 'Tarefas Pendentes';
+        if (filter === 'completed') title = 'Tarefas Concluídas';
+        
+        this.elements.sectionTitle.textContent = title;
+        
+        // Mostra/oculta botão de limpar concluídas
+        this.elements.clearCompletedBtn.style.display = filter === 'completed' ? 'block' : 'none';
+    }
+    
+    /**
+     * Renderiza a lista de tarefas
+     */
+    render() {
+        // Filtra as tarefas
+        let filteredTasks = [];
+        switch (this.currentFilter) {
+            case 'pending':
+                filteredTasks = this.tasks.filter(t => !t.completed);
+                break;
+            case 'completed':
+                filteredTasks = this.tasks.filter(t => t.completed);
+                break;
+            default:
+                filteredTasks = [...this.tasks];
+        }
+        
+        // Renderiza as tarefas
+        this.elements.taskList.innerHTML = '';
+        
+        filteredTasks.forEach(task => {
+            const taskElement = document.createElement('li');
+            taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
+            taskElement.dataset.taskId = task.id;
+            
+            taskElement.innerHTML = `
+                <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''}>
+                <span class="task-text">${task.text}</span>
+                <div class="task-actions">
+                    <button class="delete-btn" title="Excluir tarefa">×</button>
+                </div>
+            `;
+            
+            // Adiciona event listeners
+            const checkbox = taskElement.querySelector('.task-checkbox');
+            checkbox.addEventListener('change', () => this.toggleTask(task.id));
+            
+            const deleteBtn = taskElement.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.deleteTask(task.id);
+            });
+            
+            this.elements.taskList.appendChild(taskElement);
+        });
+        
+        // Atualiza o estado vazio
+        this.elements.emptyState.classList.toggle('show', filteredTasks.length === 0);
+        
+        // Atualiza estatísticas
+        this.updateStats();
+    }
+    
+    /**
+     * Atualiza as estatísticas
+     */
+    updateStats() {
+        const total = this.tasks.length;
+        const completed = this.tasks.filter(t => t.completed).length;
+        const pending = total - completed;
+        
+        this.elements.totalTasks.textContent = total;
+        this.elements.completedTasks.textContent = completed;
+        this.elements.pendingTasks.textContent = pending;
+        
+        // Atualiza contadores dos filtros
+        this.elements.allCount.textContent = total;
+        this.elements.pendingCount.textContent = pending;
+        this.elements.completedCount.textContent = completed;
+    }
+    
+    /**
+     * Carrega as tarefas do localStorage
+     */
+    loadTasks() {
+        const savedTasks = localStorage.getItem('todoTasks');
+        if (savedTasks) {
+            try {
+                const parsedTasks = JSON.parse(savedTasks);
+                this.tasks = parsedTasks.tasks || [];
+                this.taskIdCounter = parsedTasks.taskIdCounter || 1;
+                this.currentFilter = parsedTasks.currentFilter || 'all';
+                
+                // Atualiza o filtro ativo
+                this.updateFilterButtons(this.currentFilter);
+                
+                this.showToast('Tarefas carregadas!', 'Suas tarefas foram recuperadas com sucesso', 'success');
+            } catch (e) {
+                console.error('Erro ao carregar tarefas:', e);
+                this.showToast('Erro', 'Não foi possível carregar as tarefas salvas', 'error');
+            }
+        }
+    }
+    
+    /**
+     * Salva as tarefas no localStorage
+     */
+    saveTasks() {
+        const data = {
+            tasks: this.tasks,
+            taskIdCounter: this.taskIdCounter,
+            currentFilter: this.currentFilter
+        };
+        
+        localStorage.setItem('todoTasks', JSON.stringify(data));
+    }
+    
+    /**
+     * Mostra o spinner de carregamento
+     */
+    showLoading(duration) {
+        this.elements.loadingSpinner.style.display = 'flex';
+        setTimeout(() => {
+            this.elements.loadingSpinner.style.display = 'none';
+        }, duration);
+    }
+    
+    /**
+     * Mostra uma notificação toast
+     */
+    showToast(title, message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        toast.innerHTML = `
+            <div class="toast-content">
+                <h4 class="toast-title">${title}</h4>
+                <p class="toast-message">${message}</p>
+            </div>
+        `;
+        
+        this.elements.toastContainer.appendChild(toast);
+        
+        // Remove automaticamente após 5 segundos
+        setTimeout(() => {
+            toast.style.animation = 'slideInRight 0.3s ease reverse forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+}
+
+// Inicializa a aplicação quando o DOM estiver pronto
+document.addEventListener('DOMContentLoaded', () => {
+    new TodoApp();
+});
